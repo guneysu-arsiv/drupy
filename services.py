@@ -5,7 +5,7 @@ drupal_services is a module to call Drupal Services.
 """
 
 import requests
-
+from pprint import pprint
 
 class ServicesSessionInfo:
 
@@ -37,9 +37,12 @@ class Crud(object):
         pass
 
     def index(self):
-        full_url = '%s/%s' % (self.kwargs['config']['url'],
+        full_url = '%s/%s.json' % (self.kwargs['config']['url'],
                               self.base_url)
-        return requests.get(full_url).json()
+        return requests.get(full_url,
+                params = self.kwargs['config'].fromkeys( ['services_token'],
+                    self.kwargs['config']['services_token'])
+                ).json()
 
     def create(self):
         pass
@@ -136,6 +139,7 @@ class DrupalServices:
         self.config = config
         self.node = NodeService(config=config)
         self.term = TermService(config=config)
+        self.file = FileService(config=config)
         self.vocabulary = VocabularyService(config=config)
 
         if (config.has_key('username') and config.has_key('key')):
@@ -155,6 +159,7 @@ if __name__ == '__main__':
                           body=u'GÖVDE GÖSTERİSİ')
 
     drupal = DrupalServices(config.config_local)
-    drupal.node.index()
-    drupal.term.index()
-    drupal.vocabulary.index()
+    pprint ( drupal.node.index() )
+    pprint ( drupal.file.index() )
+    pprint ( drupal.term.index() )
+    pprint ( drupal.vocabulary.index() )
