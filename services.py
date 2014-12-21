@@ -5,13 +5,14 @@ drupal_services is a module to call Drupal Services.
 """
 
 import requests
+
 from datetime import date
+
 TODAY = date.today().strftime('%d/%m/%Y')
 # TODO give ability to custom date/time formatting
 
 
 class Node(dict):
-
     """docstring for Node
         Placeholder for base Node type
         This class will be used for custom nodes
@@ -22,26 +23,24 @@ class Node(dict):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         body = {'body': {'und':
-                         [{'summary': kwargs.get('summary'),
-                           'value': kwargs.get('body')}]}}
+                             [{'summary': kwargs.get('summary'),
+                               'value': kwargs.get('body')}]}}
         super(Node, self).__init__(**kwargs)
         self.update(body)
 
 
 class Takvim(Node):
-
     """docstring for Takvim"""
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         field_date = {'field_date':
-                      {'und': [{'value': {'date': TODAY}}]}}
+                          {'und': [{'value': {'date': TODAY}}]}}
         super(Takvim, self).__init__(type='takvim', **kwargs)
         self.update(field_date)
 
 
 class BlogPost(Node):
-
     """docstring for Takvim"""
 
     def __init__(self, **kwargs):
@@ -50,7 +49,6 @@ class BlogPost(Node):
 
 
 class ServicesRequest(object):
-
     """docstring for ServicesRequest
         Headers
             Accept          : application/json
@@ -90,7 +88,7 @@ class ServicesRequest(object):
                             params=url_parameters,
                             headers={'Accept': 'application/%s' % accept},
                             data=payload,
-                            ).json()
+        ).json()
         pass
 
     def post(self, *args, **kwargs):
@@ -107,7 +105,6 @@ class ServicesRequest(object):
 
 
 class Crud(object):
-
     """docstring for Crud"""
     # TODO
     # Add Accept: application/json to all requests
@@ -158,7 +155,6 @@ class Crud(object):
 
 
 class FileService(Crud):
-
     """docstring for FileServices"""
 
     def __init__(self, *args, **kwargs):
@@ -170,7 +166,6 @@ class FileService(Crud):
 
 
 class NodeService(Crud):
-
     """docstring for NodeService"""
 
     def __init__(self, *args, **kwargs):
@@ -185,7 +180,6 @@ class NodeService(Crud):
 
 
 class TermService(Crud):
-
     """docstring for TermService"""
 
     def __init__(self, *args, **kwargs):
@@ -215,7 +209,6 @@ class TermService(Crud):
 
 
 class VocabularyService(Crud):
-
     """docstring for VocabularyService"""
 
     def __init__(self, *args, **kwargs):
@@ -247,7 +240,6 @@ class VocabularyService(Crud):
 
 
 class SystemService(object):
-
     """docstring for SystemService"""
 
     def __init__(self, *args, **kwargs):
@@ -263,7 +255,6 @@ class SystemService(object):
 
 
 class DrupalServices:
-
     """Drupal services class.
     config is a nice way to deal with configuration files."""
 
@@ -272,6 +263,7 @@ class DrupalServices:
         self.term = TermService(config=config)
         self.file = FileService(config=config)
         self.vocabulary = VocabularyService(config=config)
+
 
 if __name__ == '__main__':
     import config
