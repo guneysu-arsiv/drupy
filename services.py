@@ -6,6 +6,10 @@ drupal_services is a module to call Drupal Services.
 
 import requests
 from pprint import pprint
+from datetime import date
+TODAY = date.today().strftime('%d/%m/%Y')
+# TODO give ability to custom date/time formatting
+
 
 class ServicesSessionInfo:
 
@@ -128,8 +132,31 @@ class NodeService(Crud):
         self.base_url = 'node'
         self.args = args
         self.kwargs = kwargs
+        self.Node = None
         super(NodeService, self).__init__(*args, **kwargs)
         return
+
+    def new_takvim(self, **kwargs):
+        new_node = self.new(type='takvim', **kwargs)
+        new_node['field_data'] = {'und': [{'value': {'date': TODAY }}] }
+        return new_node
+
+    def new(self, **kwargs):
+        """docstring for node"""
+        # TODO Beware of all fields int|long|geo|file|etc
+        # TODO Convert this to Class and let users to define their own
+        # Types like
+        # >>> class MyNode(Node):
+        #   pass
+        #   Summary and body is not required by Drupal
+        #   kwargs.get[key] used. If the key is not exist
+        #   kwargs.get[key] returns None instead of raising exception
+        node = {'type': kwargs['type'],
+                'title': kwargs['title'],
+                'body': {'und': [{'summary': kwargs.get('summary'),
+                                'value': kwargs.get('body' ) } ] }
+                }
+        return node
 
 
 class TermService(Crud):
@@ -208,7 +235,8 @@ if __name__ == '__main__':
     # import ipdb; ipdb.set_trace() # BREAKPOINT
     drupal = DrupalServices(config.config_local)
     # pprint ( drupal.node.index() )
-    pprint ( drupal.node.retrieve(120) )
+    # pprint ( drupal.node.retrieve(120) )
+    print drupal.node.new_takvim(title='Title', summary='Summary', body='body')
     # pprint ( drupal.file.index() )
     # pprint ( drupal.term.index() )
     # pprint ( drupal.vocabulary.index() )

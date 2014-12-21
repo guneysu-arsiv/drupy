@@ -5,18 +5,6 @@ TODAY = date.today().strftime('%d/%m/%Y')
 
 __all__ = ['node']
 
-
-def node(title, summary, body, date=None, type='takvim'):
-    """docstring for node"""
-    node = {'type': type,
-            'title': title,
-            'body': {'und': [{'summary': summary,
-                              'value': body}]},
-            'field_date': {'und': [{'value': {'date': TODAY}}]}
-            }
-    return node
-
-
 def taxonomy():
     pass
 
