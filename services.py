@@ -2,6 +2,22 @@
 # -*- coding: utf-8 -*-
 """
 drupal_services is a module to call Drupal Services.
+you must install https://www.drupal.org/project/services_token_access
+module.
+
+Because authenticating users with drupal requires
+- Take X-CSRF-Token
+- Login with user/password by giving X-CSRF-Token in the headers
+- Take <session_name> and <session_id>
+- Always send a Cookie header "Cookie: <session_name> = <session_id>
+But be ware of that services_token is sent with url_parameter and
+Use the module "AT YOUR OWN RISK!!!"
+
+Go to user page and generate token.
+Put this token into config.py
+If your authenticated users will generate content, give your users to
+use and manage tokens permission.
+
 """
 
 import requests
@@ -13,6 +29,7 @@ TODAY = date.today().strftime('%d/%m/%Y')
 
 
 class Node(dict):
+
     """docstring for Node
         Placeholder for base Node type
         This class will be used for custom nodes
@@ -23,24 +40,26 @@ class Node(dict):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         body = {'body': {'und':
-                             [{'summary': kwargs.get('summary'),
-                               'value': kwargs.get('body')}]}}
+                         [{'summary': kwargs.get('summary'),
+                           'value': kwargs.get('body')}]}}
         super(Node, self).__init__(**kwargs)
         self.update(body)
 
 
 class Takvim(Node):
+
     """docstring for Takvim"""
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         field_date = {'field_date':
-                          {'und': [{'value': {'date': TODAY}}]}}
+                      {'und': [{'value': {'date': TODAY}}]}}
         super(Takvim, self).__init__(type='takvim', **kwargs)
         self.update(field_date)
 
 
 class BlogPost(Node):
+
     """docstring for Takvim"""
 
     def __init__(self, **kwargs):
@@ -49,6 +68,7 @@ class BlogPost(Node):
 
 
 class ServicesRequest(object):
+
     """docstring for ServicesRequest
         Headers
             Accept          : application/json
@@ -69,42 +89,18 @@ class ServicesRequest(object):
         self.headers = dict(Accept='application/json')
 
     # @classmethod
-    def __call__(self, method, url, payload=None, accept='json'):
+    def __call__(self, method, url, data=None, accept='json'):
         """docstring for __call__"""
-        sess = requests.Session()
-        req = requests.Request(method=method,
-                               url=url,
-                               params=self.params,
-                               data=payload,
-                               headers={'Accept': 'application/%s' % accept})
-        prepped = req.prepare()
-        return sess.send(prepped).json()
-
-    def get(self, url, accept='json', params=None, payload=None, *args, **kwargs):
-        """docstring for get"""
-        url_parameters = self.config.fromkeys(['services_token'],
-                                              self.config['services_token'])
-        return requests.get(url,
-                            params=url_parameters,
-                            headers={'Accept': 'application/%s' % accept},
-                            data=payload,
-        ).json()
-        pass
-
-    def post(self, *args, **kwargs):
-        """docstring for post"""
-        pass
-
-    def put(self, *args, **kwargs):
-        """docstring for put put"""
-        pass
-
-    def delete(self, *args, **kwargs):
-        """docstring for delete"""
-        pass
+        resp = requests.request(method=method,
+                                url=url,
+                                params=self.params,
+                                data=data,
+                                headers={'Accept': 'application/%s' % accept})
+        return resp.json()
 
 
 class Crud(object):
+
     """docstring for Crud"""
     # TODO
     # Add Accept: application/json to all requests
@@ -155,6 +151,7 @@ class Crud(object):
 
 
 class FileService(Crud):
+
     """docstring for FileServices"""
 
     def __init__(self, *args, **kwargs):
@@ -166,6 +163,7 @@ class FileService(Crud):
 
 
 class NodeService(Crud):
+
     """docstring for NodeService"""
 
     def __init__(self, *args, **kwargs):
@@ -175,11 +173,23 @@ class NodeService(Crud):
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
-    def new(self, **kargs):
+    def new(self, **kwargs):
+        """
+        :param kargs:
+        :return: Node(dict)
+        Essential kwargs for node creations are
+        type and title
+        body not essential but should be exists
+        summary is optional
+        For nodes that contain different types of fields
+        create your class that derived from Node class.
+        Not implemented yet.
+        """
         return Node(**kwargs)
 
 
 class TermService(Crud):
+
     """docstring for TermService"""
 
     def __init__(self, *args, **kwargs):
@@ -199,16 +209,27 @@ class TermService(Crud):
 
     def new(self, **kwargs):
         """
-        Parameters
-            vid         :   <vid>
-            name        :   <name>
-            description :   <description>
-            format      :   None|markdown|plain_text|etc
+        :param kwargs:
+        vid, name, description, format
+        :vid           Required
+        :name          Human readable term name (title)
+        :description   like summary in nodes
+        :format        Text format (machine readable)
+
+        :return:
+        dict(**kwargs)
+
+        Unfortunately, you can not assign parents via REST api. But you can
+        Retrieve parents of taxonomy terms in list format via
+            <URL>/rest_end_point/taxonomy_vocabulary/getTree
+            Method POST
+            Payload {vid:<vocabulary_id>}
         """
         return super(TermService, self).new(**kwargs)
 
 
 class VocabularyService(Crud):
+
     """docstring for VocabularyService"""
 
     def __init__(self, *args, **kwargs):
@@ -229,17 +250,22 @@ class VocabularyService(Crud):
 
     def new(self, **kwargs):
         """
-        Parameters
-            name        :   <name>
-            description :   <description>
-            machine_name:  <transliterate_this>
-            format      :   None|markdown|plain_text|etc
-            hierarchy   :   0 Dont know what is it
+        :param kwargs:
+        name, description, machine_name, format, hierarchy
+        :name   Human readable vocabulary name (title)
+        :description   like summary in nodes
+        :machine_name   Machine readable ascii-set name. Not required.
+        :format         Text format (machine readable)
+        :hierarchy      Do not know, in integer
+
+        :return:
+        dict(**kwargs)
         """
         return super(VocabularyService, self).new(**kwargs)
 
 
 class SystemService(object):
+
     """docstring for SystemService"""
 
     def __init__(self, *args, **kwargs):
@@ -255,6 +281,7 @@ class SystemService(object):
 
 
 class DrupalServices:
+
     """Drupal services class.
     config is a nice way to deal with configuration files."""
 
