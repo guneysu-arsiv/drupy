@@ -3,8 +3,6 @@
 from datetime import date
 TODAY = date.today().strftime('%d/%m/%Y')
 
-__all__ = ['node']
-
 def taxonomy():
     pass
 

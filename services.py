@@ -45,12 +45,19 @@ class ServicesRequest(object):
         self.config = config
         self.params = self.config.fromkeys( ['services_token'],
                     self.config['services_token'])
-        self.headers  = dict ( Accept = 'application/json')
+        self.headers = dict(Accept='application/json')
 
-    def __call__(self, *args, **kwargs):
+    # @classmethod
+    def __call__(self, method, url, payload=None, accept='json') :
         """docstring for __call__"""
-        # TODO return request data
-        pass
+        print method, url, payload, accept
+        sess = requests.Session()
+        req = requests.Request(method=method,
+                url = url,
+                params = self.params,
+                headers = {'Accept': 'application/%s' % accept})
+        prepped = req.prepare()
+        return sess.send( prepped ).json()
 
     def get(self, url, accept='json',params=None, payload=None, *args, **kwargs):
         """docstring for get"""
@@ -94,35 +101,45 @@ class Crud(object):
                               self.base_url)
         pass
 
+    def id_path(self, id):
+        return '%s/%s' % ( self.full_path, id)
+
+    def new(self, **kwargs):
+        return dict(kwargs)
+
     def index(self):
-        return self.request.get(self.full_path)
+        # Method GET
+        return self.request('GET', self.full_path)
 
-    def create(self):
-        pass
+    def create(self, node):
+        # Method POST
+        return self.request('POST') # FIXME
 
-    def update(self):
-        pass
+    def update(self, id, node):
+        # Method PUT
+        url = self.id_path(id)
+        return self.request('POST', url) # FIXME
 
     def retrieve(self, id):
-        url = '%s/%s.json' % ( self.full_path,
-                id)
+        # Method  GET
+        url = self.id_path(id)
+        return self.request('GET', url)
 
-        return self.request.get(url)
-
-    def delete(self):
-        pass
+    def delete(self, id):
+        # Method DELETE
+        return self.request('DELETE', url) # FIXME
 
 
 class FileService(Crud):
 
     """docstring for FileServices"""
 
-    def __new__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.base_url = 'file'
         self.args = args
         self.kwargs = kwargs
+        super(FileService, self).__init__(*args, **kwargs)
         return
-
 
 class NodeService(Crud):
 
@@ -136,12 +153,13 @@ class NodeService(Crud):
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
-    def new_takvim(self, **kwargs):
+    def new_takvim(self, type, **kwargs):
         new_node = self.new(type='takvim', **kwargs)
         new_node['field_data'] = {'und': [{'value': {'date': TODAY }}] }
         return new_node
 
-    def new(self, **kwargs):
+
+    def new(self, title, type, **kwargs):
         """docstring for node"""
         # TODO Beware of all fields int|long|geo|file|etc
         # TODO Convert this to Class and let users to define their own
@@ -151,8 +169,8 @@ class NodeService(Crud):
         #   Summary and body is not required by Drupal
         #   kwargs.get[key] used. If the key is not exist
         #   kwargs.get[key] returns None instead of raising exception
-        node = {'type': kwargs['type'],
-                'title': kwargs['title'],
+        node = {'type': type,
+                'title': title,
                 'body': {'und': [{'summary': kwargs.get('summary'),
                                 'value': kwargs.get('body' ) } ] }
                 }
@@ -178,6 +196,16 @@ class TermService(Crud):
         # Payload tid=<TID>
         return
 
+    def new(self, **kwargs):
+        """
+        Parameters
+            vid         :   <vid>
+            name        :   <name>
+            description :   <description>
+            format      :   None|markdown|plain_text|etc
+        """
+        return super(TermService, self).new(**kwargs)
+
 
 class VocabularyService(Crud):
 
@@ -187,6 +215,8 @@ class VocabularyService(Crud):
         self.args = args
         self.kwargs = kwargs
         super(VocabularyService, self).__init__(*args, **kwargs)
+        return
+
 
     def getTree(self):
         """docstring for getTree"""
@@ -196,6 +226,17 @@ class VocabularyService(Crud):
         #
         url = '%s/%s' % (self.base_url, 'getTree')
         return
+
+    def new(self, **kwargs):
+        """
+        Parameters
+            name        :   <name>
+            description :   <description>
+            machine_name:  <transliterate_this>
+            format      :   None|markdown|plain_text|etc
+            hierarchy   :   0 Dont know what is it
+        """
+        return super(VocabularyService, self).new(**kwargs)
 
 
 class SystemService(object):
@@ -228,16 +269,28 @@ class DrupalServices:
 if __name__ == '__main__':
     import config
     import interface
-    NODE = interface.node(title=u'BAŞLIK',
-                          summary=u'ÖZET',
-                          body=u'GÖVDE GÖSTERİSİ')
 
     # import ipdb; ipdb.set_trace() # BREAKPOINT
     drupal = DrupalServices(config.config_local)
     # pprint ( drupal.node.index() )
     # pprint ( drupal.node.retrieve(120) )
-    print drupal.node.new_takvim(title='Title', summary='Summary', body='body')
+    # print drupal.node.new_takvim(title='Title', summary='Summary', body='body')
+    # print drupal.node.index()
     # pprint ( drupal.file.index() )
     # pprint ( drupal.term.index() )
     # pprint ( drupal.vocabulary.index() )
     # pprint ( drupal.vocabulary.retrieve(2))
+    # print drupal.node.create()
+    # print drupal.term.create()
+    # print drupal.vocabulary.create()
+    # print drupal.file.create()
+    print drupal.node.update(555)
+    # print drupal.term.new()
+    # print drupal.vocabulary.new()
+    # print drupal.file.new()
+    # print drupal.node.new(title = u'Başlık', type='blog_post')
+    # print drupal.node.new_takvim(title = u'Başlık', type='blog_post')
+
+    # print drupal.request(method ='GET',
+                        # url = 'http://w3.hacker.tk/api/file',
+                        # payload = None)
