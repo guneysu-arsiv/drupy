@@ -3,6 +3,7 @@
 from datetime import date
 TODAY = date.today().strftime('%d/%m/%Y')
 
+
 def taxonomy():
     pass
 

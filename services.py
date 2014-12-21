@@ -5,30 +5,52 @@ drupal_services is a module to call Drupal Services.
 """
 
 import requests
-from pprint import pprint
 from datetime import date
 TODAY = date.today().strftime('%d/%m/%Y')
 # TODO give ability to custom date/time formatting
 
 
-class ServicesSessionInfo:
+class Node(dict):
 
-    """docstring for ServicesSessionInfo"""
+    """docstring for Node
+        Placeholder for base Node type
+        This class will be used for custom nodes
+        that have different field types
+        Like date, long, list, taxonomy_reference, etc.
+    """
 
-    def __init__(self, url, username, password):
-        # TODO
-        # https://groups.drupal.org/node/358308
-        # POST url/user/token.json
-        #  Save CSRF = data['token']
-        # POST url/user/login.json username/password
-        #   Save session_name and session_id
-        # POST url/system/get_variable.json
-        #   Headers
-        #       Cookie :    <session_name> = <session_id>
-        #       X-CSRF-Token  = <CSRF Token>
-        pass
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        body = {'body': {'und':
+                         [{'summary': kwargs.get('summary'),
+                           'value': kwargs.get('body')}]}}
+        super(Node, self).__init__(**kwargs)
+        self.update(body)
+
+
+class Takvim(Node):
+
+    """docstring for Takvim"""
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        field_date = {'field_date':
+                      {'und': [{'value': {'date': TODAY}}]}}
+        super(Takvim, self).__init__(type='takvim', **kwargs)
+        self.update(field_date)
+
+
+class BlogPost(Node):
+
+    """docstring for Takvim"""
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        return super(BlogPost, self).__init__(type='blog_post', **kwargs)
+
 
 class ServicesRequest(object):
+
     """docstring for ServicesRequest
         Headers
             Accept          : application/json
@@ -38,36 +60,37 @@ class ServicesRequest(object):
         Payload
             services_token  : <token>
         """
-        # TODO Implement HEAD method to fetch headers
+    # TODO Implement HEAD method to fetch headers
+
     def __init__(self, config, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         self.config = config
-        self.params = self.config.fromkeys( ['services_token'],
-                    self.config['services_token'])
+        self.params = self.config.fromkeys(['services_token'],
+                                           self.config['services_token'])
         self.headers = dict(Accept='application/json')
 
     # @classmethod
-    def __call__(self, method, url, payload=None, accept='json') :
+    def __call__(self, method, url, payload=None, accept='json'):
         """docstring for __call__"""
-        print method, url, payload, accept
         sess = requests.Session()
         req = requests.Request(method=method,
-                url = url,
-                params = self.params,
-                headers = {'Accept': 'application/%s' % accept})
+                               url=url,
+                               params=self.params,
+                               data=payload,
+                               headers={'Accept': 'application/%s' % accept})
         prepped = req.prepare()
-        return sess.send( prepped ).json()
+        return sess.send(prepped).json()
 
-    def get(self, url, accept='json',params=None, payload=None, *args, **kwargs):
+    def get(self, url, accept='json', params=None, payload=None, *args, **kwargs):
         """docstring for get"""
-        url_parameters = self.config.fromkeys( ['services_token'],
-                    self.config['services_token'])
+        url_parameters = self.config.fromkeys(['services_token'],
+                                              self.config['services_token'])
         return requests.get(url,
-                params = url_parameters,
-                headers = {'Accept': 'application/%s' % accept},
-                data = payload,
-                ).json()
+                            params=url_parameters,
+                            headers={'Accept': 'application/%s' % accept},
+                            data=payload,
+                            ).json()
         pass
 
     def post(self, *args, **kwargs):
@@ -81,7 +104,6 @@ class ServicesRequest(object):
     def delete(self, *args, **kwargs):
         """docstring for delete"""
         pass
-
 
 
 class Crud(object):
@@ -98,11 +120,11 @@ class Crud(object):
         self.config = config
         self.request = ServicesRequest(config)
         self.full_path = '%s/%s' % (self.config['url'],
-                              self.base_url)
+                                    self.base_url)
         pass
 
     def id_path(self, id):
-        return '%s/%s' % ( self.full_path, id)
+        return '%s/%s' % (self.full_path, id)
 
     def new(self, **kwargs):
         return dict(kwargs)
@@ -111,23 +133,28 @@ class Crud(object):
         # Method GET
         return self.request('GET', self.full_path)
 
-    def create(self, node):
+    def create(self, **kwargs):
         # Method POST
-        return self.request('POST') # FIXME
+        return self.request(
+            method='POST',
+            url=self.full_path,
+            data=self.new(**kwargs))
 
     def update(self, id, node):
         # Method PUT
         url = self.id_path(id)
-        return self.request('POST', url) # FIXME
+        return self.request(
+            method='PUT',
+            url=self.full_path,
+            data=self.new(**kwargs))
 
     def retrieve(self, id):
         # Method  GET
-        url = self.id_path(id)
-        return self.request('GET', url)
+        return self.request('GET', self.id_path(id))
 
     def delete(self, id):
         # Method DELETE
-        return self.request('DELETE', url) # FIXME
+        return self.request('DELETE', self.id_path(id))
 
 
 class FileService(Crud):
@@ -141,6 +168,7 @@ class FileService(Crud):
         super(FileService, self).__init__(*args, **kwargs)
         return
 
+
 class NodeService(Crud):
 
     """docstring for NodeService"""
@@ -149,32 +177,11 @@ class NodeService(Crud):
         self.base_url = 'node'
         self.args = args
         self.kwargs = kwargs
-        self.Node = None
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
-    def new_takvim(self, type, **kwargs):
-        new_node = self.new(type='takvim', **kwargs)
-        new_node['field_data'] = {'und': [{'value': {'date': TODAY }}] }
-        return new_node
-
-
-    def new(self, title, type, **kwargs):
-        """docstring for node"""
-        # TODO Beware of all fields int|long|geo|file|etc
-        # TODO Convert this to Class and let users to define their own
-        # Types like
-        # >>> class MyNode(Node):
-        #   pass
-        #   Summary and body is not required by Drupal
-        #   kwargs.get[key] used. If the key is not exist
-        #   kwargs.get[key] returns None instead of raising exception
-        node = {'type': type,
-                'title': title,
-                'body': {'und': [{'summary': kwargs.get('summary'),
-                                'value': kwargs.get('body' ) } ] }
-                }
-        return node
+    def new(self, **kargs):
+        return Node(**kwargs)
 
 
 class TermService(Crud):
@@ -210,13 +217,13 @@ class TermService(Crud):
 class VocabularyService(Crud):
 
     """docstring for VocabularyService"""
+
     def __init__(self, *args, **kwargs):
         self.base_url = 'taxonomy_vocabulary'
         self.args = args
         self.kwargs = kwargs
         super(VocabularyService, self).__init__(*args, **kwargs)
         return
-
 
     def getTree(self):
         """docstring for getTree"""
@@ -268,29 +275,5 @@ class DrupalServices:
 
 if __name__ == '__main__':
     import config
-    import interface
 
-    # import ipdb; ipdb.set_trace() # BREAKPOINT
     drupal = DrupalServices(config.config_local)
-    # pprint ( drupal.node.index() )
-    # pprint ( drupal.node.retrieve(120) )
-    # print drupal.node.new_takvim(title='Title', summary='Summary', body='body')
-    # print drupal.node.index()
-    # pprint ( drupal.file.index() )
-    # pprint ( drupal.term.index() )
-    # pprint ( drupal.vocabulary.index() )
-    # pprint ( drupal.vocabulary.retrieve(2))
-    # print drupal.node.create()
-    # print drupal.term.create()
-    # print drupal.vocabulary.create()
-    # print drupal.file.create()
-    print drupal.node.update(555)
-    # print drupal.term.new()
-    # print drupal.vocabulary.new()
-    # print drupal.file.new()
-    # print drupal.node.new(title = u'Başlık', type='blog_post')
-    # print drupal.node.new_takvim(title = u'Başlık', type='blog_post')
-
-    # print drupal.request(method ='GET',
-                        # url = 'http://w3.hacker.tk/api/file',
-                        # payload = None)
