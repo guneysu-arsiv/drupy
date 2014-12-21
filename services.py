@@ -24,25 +24,74 @@ class ServicesSessionInfo:
         #       X-CSRF-Token  = <CSRF Token>
         pass
 
+class ServicesRequest(object):
+    """docstring for ServicesRequest
+        Headers
+            Accept          : application/json
+            Cookie          : <session_name> = <session_id>
+            X-CSRF-Token    : <x-csrf-token>
+            Session Info    : <username> <e-mail> etc.
+        Payload
+            services_token  : <token>
+        """
+        # TODO Implement HEAD method to fetch headers
+    def __init__(self, config, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.config = config
+        self.params = self.config.fromkeys( ['services_token'],
+                    self.config['services_token'])
+        self.headers  = dict ( Accept = 'application/json')
+
+    def __call__(self, *args, **kwargs):
+        """docstring for __call__"""
+        # TODO return request data
+        pass
+
+    def get(self, url, accept='json',params=None, payload=None, *args, **kwargs):
+        """docstring for get"""
+        url_parameters = self.config.fromkeys( ['services_token'],
+                    self.config['services_token'])
+        return requests.get(url,
+                params = url_parameters,
+                headers = {'Accept': 'application/%s' % accept},
+                data = payload,
+                ).json()
+        pass
+
+    def post(self, *args, **kwargs):
+        """docstring for post"""
+        pass
+
+    def put(self, *args, **kwargs):
+        """docstring for put put"""
+        pass
+
+    def delete(self, *args, **kwargs):
+        """docstring for delete"""
+        pass
+
+
 
 class Crud(object):
 
     """docstring for Crud"""
     # TODO
+    # Add Accept: application/json to all requests
+    # Or find a method that always add .json to end of url
     # Create/Retrieve/Update/Delete/Index
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.config = config
+        self.request = ServicesRequest(config)
+        self.full_path = '%s/%s' % (self.config['url'],
+                              self.base_url)
         pass
 
     def index(self):
-        full_url = '%s/%s.json' % (self.kwargs['config']['url'],
-                              self.base_url)
-        return requests.get(full_url,
-                params = self.kwargs['config'].fromkeys( ['services_token'],
-                    self.kwargs['config']['services_token'])
-                ).json()
+        return self.request.get(self.full_path)
 
     def create(self):
         pass
@@ -50,20 +99,24 @@ class Crud(object):
     def update(self):
         pass
 
-    def retrieve(self):
-        pass
+    def retrieve(self, id):
+        url = '%s/%s.json' % ( self.full_path,
+                id)
+
+        return self.request.get(url)
 
     def delete(self):
         pass
 
 
-class FileServices(Crud):
+class FileService(Crud):
 
     """docstring for FileServices"""
 
-    def __init__(self, *args, **kwargs):
+    def __new__(self, *args, **kwargs):
         self.base_url = 'file'
-        super(FileService, self).__init__(*args, **kwargs)
+        self.args = args
+        self.kwargs = kwargs
         return
 
 
@@ -73,6 +126,8 @@ class NodeService(Crud):
 
     def __init__(self, *args, **kwargs):
         self.base_url = 'node'
+        self.args = args
+        self.kwargs = kwargs
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
@@ -83,6 +138,8 @@ class TermService(Crud):
 
     def __init__(self, *args, **kwargs):
         self.base_url = 'taxonomy_term'
+        self.args = args
+        self.kwargs = kwargs
         super(TermService, self).__init__(*args, **kwargs)
         return
 
@@ -98,11 +155,11 @@ class TermService(Crud):
 class VocabularyService(Crud):
 
     """docstring for VocabularyService"""
-
     def __init__(self, *args, **kwargs):
         self.base_url = 'taxonomy_vocabulary'
+        self.args = args
+        self.kwargs = kwargs
         super(VocabularyService, self).__init__(*args, **kwargs)
-        return
 
     def getTree(self):
         """docstring for getTree"""
@@ -136,20 +193,10 @@ class DrupalServices:
     config is a nice way to deal with configuration files."""
 
     def __init__(self, config):
-        self.config = config
         self.node = NodeService(config=config)
         self.term = TermService(config=config)
         self.file = FileService(config=config)
         self.vocabulary = VocabularyService(config=config)
-
-        if (config.has_key('username') and config.has_key('key')):
-            pass
-            # NotImplemented
-        elif (config.has_key('services_token')):
-            # TODO define new class for session
-            # Get X-CSRF-Token
-            pass
-
 
 if __name__ == '__main__':
     import config
@@ -158,8 +205,11 @@ if __name__ == '__main__':
                           summary=u'ÖZET',
                           body=u'GÖVDE GÖSTERİSİ')
 
+    # import ipdb; ipdb.set_trace() # BREAKPOINT
     drupal = DrupalServices(config.config_local)
-    pprint ( drupal.node.index() )
-    pprint ( drupal.file.index() )
-    pprint ( drupal.term.index() )
-    pprint ( drupal.vocabulary.index() )
+    # pprint ( drupal.node.index() )
+    pprint ( drupal.node.retrieve(120) )
+    # pprint ( drupal.file.index() )
+    # pprint ( drupal.term.index() )
+    # pprint ( drupal.vocabulary.index() )
+    # pprint ( drupal.vocabulary.retrieve(2))
