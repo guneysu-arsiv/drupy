@@ -45,6 +45,24 @@ class Node(dict):
         super(Node, self).__init__(**kwargs)
         self.update(body)
 
+    def publish(self):
+        pass
+
+    def unpublish(self):
+        pass
+
+    def lookup(self):
+        pass
+
+    def autocomplete(self):
+        pass
+
+    def files(self):
+        pass
+
+    def attach_file(self):
+        pass
+
 
 class Takvim(Node):
 
@@ -88,7 +106,6 @@ class ServicesRequest(object):
                                            self.config['services_token'])
         self.headers = dict(Accept='application/json')
 
-    # @classmethod
     def __call__(self, method, url, data=None, accept='json'):
         """docstring for __call__"""
         resp = requests.request(method=method,
@@ -126,11 +143,14 @@ class Crud(object):
         # Method GET
         return self.request('GET', self.full_path)
 
-    def create(self, **kwargs):
+    def create(self, url = None, **kwargs):
         # Method POST
+        if not url:
+            url = self.full_path
+
         return self.request(
             method='POST',
-            url=self.full_path,
+            url=url,
             data=self.new(**kwargs))
 
     def update(self, id, node):
@@ -160,6 +180,9 @@ class FileService(Crud):
         self.kwargs = kwargs
         super(FileService, self).__init__(*args, **kwargs)
         return
+
+    def create_raw(self):
+        pass
 
 
 class NodeService(Crud):
@@ -263,6 +286,62 @@ class VocabularyService(Crud):
         """
         return super(VocabularyService, self).new(**kwargs)
 
+class UserService(Crud):
+    """docstring for UserService"""
+    def __init__(self, *args, **kwargs):
+        self.base_url = 'user'
+        self.args = args
+        self.kwargs = kwargs
+        super(UserService, self).__init__(*args, **kwargs)
+
+    def new(self, **kwargs):
+        """
+        Required keywords
+            name, mail, pass
+        Optional
+            status,
+        """
+        return super(UserService, self).new(**kwargs)
+
+    def register(self, **kwargs):
+        """
+        For compatibility
+        """
+        return self.create(**kwargs)
+
+    def create(self, **kwargs):
+        """
+        Method  :   POST
+        URL     :   register
+        """
+        return super(UserService, self).create(
+                url = '%s/%s' % (self.full_path, url),
+                **kwargs)
+    def login(self, *args, **kwargs):
+        """docstring for login"""
+        pass
+
+    def logout(self, *args, **kwargs):
+        """docstring for logout"""
+        pass
+
+    def token(self, *args, **kwargs):
+        """docstring for token"""
+        pass
+
+    def request_new_password(self, *args, **kwargs):
+        """docstring for request_new_password"""
+        pass
+
+    def cancel(self, *args, **kwargs):
+        """docstring for cancel"""
+        pass
+
+    def password_reset(self, *args, **kwargs):
+        """docstring for password_reset"""
+        pass
+
+
 
 class SystemService(object):
 
@@ -279,6 +358,14 @@ class SystemService(object):
         """docstring for get_variable"""
         pass
 
+    def set_variable(self, *args, **kwargs):
+        """docstring for set_variable"""
+        pass
+
+    def resend_welcome_mail(self, *args, **kwargs):
+        """docstring for resend_welcome_mail"""
+        pass
+
 
 class DrupalServices:
 
@@ -289,6 +376,7 @@ class DrupalServices:
         self.node = NodeService(config=config)
         self.term = TermService(config=config)
         self.file = FileService(config=config)
+        self.user = UserService(config=config)
         self.vocabulary = VocabularyService(config=config)
 
 
