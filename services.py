@@ -87,13 +87,8 @@ class Takvim(Node):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         date_value_formatted = {'date' : TODAYF }
-        # field_date = {"field_date":
-        #       {"und": [{"value": date_value_formatted }]}}
-        date_value = dict( month = TODAY.month,
-                                    day = TODAY.day,
-                                    year = TODAY.year)
-        field_date = {'field_date':{'und': [{ 'value': date_value }]}}
-        print field_date
+        field_date = {"field_date":
+               {"und": [{"value": date_value_formatted }]}}
         node_settings = dict(format = 'markdown', type='takvim')
         kwargs['status'] = True
         super(Takvim, self).__init__(**kwargs)
@@ -137,8 +132,9 @@ class ServicesRequest(object):
         resp = requests.request(method=method,
                                 url=url,
                                 params=self.params,
-                                data= data,
-                                headers={'Accept': 'application/%s' % accept})
+                                data= json.dumps(data),
+                                headers={'Accept': 'application/%s' % accept,
+                                    'Content-Type': 'application/json'})
         return resp.json()
 
 
