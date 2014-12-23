@@ -51,6 +51,14 @@ class Node(dict):
 
             **kwargs):
         self.kwargs = kwargs
+        kwargs.update( dict( type = type,
+            log = log,
+            status = status,
+            comment = comment,
+            sticky = sticky,
+            language = language,
+            promote = promote,
+            frontpage = frontpage))
         body = {'body': {'und':
                          [{'summary': kwargs.get('summary'),
                            'value': kwargs.get('body')}]}}
