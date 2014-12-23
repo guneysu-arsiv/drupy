@@ -21,10 +21,12 @@ use and manage tokens permission.
 """
 
 import requests
+import json
 
 from datetime import date
 
-TODAY = date.today().strftime('%d/%m/%Y')
+TODAY = date.today()
+TODAYF = TODAY.strftime('%m/%d/%Y')
 # TODO give ability to custom date/time formatting
 
 
@@ -37,13 +39,27 @@ class Node(dict):
         Like date, long, list, taxonomy_reference, etc.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+            type = None,
+            log = None,
+            status=None,
+            comment = None,
+            sticky = None,
+            language = "und",
+            promote = None,
+            frontpage = None,
+
+            **kwargs):
         self.kwargs = kwargs
         body = {'body': {'und':
                          [{'summary': kwargs.get('summary'),
                            'value': kwargs.get('body')}]}}
         super(Node, self).__init__(**kwargs)
-        self.update(body)
+        self.update ( dict(
+                self.items() +
+                body.items() +
+                dict(status  = status ).items())
+                )
 
     def publish(self):
         pass
@@ -70,10 +86,20 @@ class Takvim(Node):
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        field_date = {'field_date':
-                      {'und': [{'value': {'date': TODAY}}]}}
-        super(Takvim, self).__init__(type='takvim', **kwargs)
-        self.update(field_date)
+        date_value_formatted = {'date' : TODAYF }
+        # field_date = {"field_date":
+        #       {"und": [{"value": date_value_formatted }]}}
+        date_value = dict( month = TODAY.month,
+                                    day = TODAY.day,
+                                    year = TODAY.year)
+        field_date = {'field_date':{'und': [{ 'value': date_value }]}}
+        print field_date
+        node_settings = dict(format = 'markdown', type='takvim')
+        kwargs['status'] = True
+        super(Takvim, self).__init__(**kwargs)
+        self.update( dict(
+            field_date.items() +
+            node_settings.items()))
 
 
 class BlogPost(Node):
@@ -111,7 +137,7 @@ class ServicesRequest(object):
         resp = requests.request(method=method,
                                 url=url,
                                 params=self.params,
-                                data=data,
+                                data= data,
                                 headers={'Accept': 'application/%s' % accept})
         return resp.json()
 
@@ -143,15 +169,23 @@ class Crud(object):
         # Method GET
         return self.request('GET', self.full_path)
 
-    def create(self, url = None, **kwargs):
+    def create(self, url=None, Type=None, **kwargs):
+        """
+        Type parameter only used for Nodes.
+        You can derive a custom NodeType class from Node() class.
+        And pass it as an argument.
+        See NodeService.new() method
+        """
         # Method POST
         if not url:
             url = self.full_path
-
+        data = self.new(Type= Type, **kwargs)
         return self.request(
             method='POST',
             url=url,
-            data=self.new(**kwargs))
+            data=data)
+        # FIXME No need to pass Type parameter if self is not instance of
+        # NodeService
 
     def update(self, id, node):
         # Method PUT
@@ -196,7 +230,8 @@ class NodeService(Crud):
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
-    def new(self, **kwargs):
+    def new(self, Type=None, **kwargs):
+        # TODO May take Node type as argument
         """
         :param kargs:
         :return: Node(dict)
@@ -207,8 +242,11 @@ class NodeService(Crud):
         For nodes that contain different types of fields
         create your class that derived from Node class.
         Not implemented yet.
+        NodeCls is a derived class from Node.
+        You can derive a class and pass it as argument like
+        self.node.new( MyCustomNodeType, **kwargs)
         """
-        return Node(**kwargs)
+        return Type(**kwargs)
 
 
 class TermService(Crud):
@@ -371,7 +409,11 @@ class DrupalServices:
 
     """Drupal services class.
     config is a nice way to deal with configuration files."""
-
+    # TODO Think that config  is property
+    # Anytime it can replaced other config like
+    # config_remote, config_other
+    # get_attr, set_attr
+    # Can be implemented by __call__ method
     def __init__(self, config):
         self.node = NodeService(config=config)
         self.term = TermService(config=config)
@@ -379,8 +421,13 @@ class DrupalServices:
         self.user = UserService(config=config)
         self.vocabulary = VocabularyService(config=config)
 
+    def __call__(self, config):
+        return self.__init__(config)
+
 
 if __name__ == '__main__':
     import config
-
     drupal = DrupalServices(config.config_local)
+    drupal(config.config_remote)
+    print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO', summary='**Foo**' )
+
