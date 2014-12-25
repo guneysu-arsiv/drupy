@@ -252,6 +252,18 @@ class NodeService(Crud):
         """
         return Type(**kwargs)
 
+    def latest(self):
+        """
+        Extra   : Retrieve the latest node data
+        """
+        nid = self.index()[0]['nid']
+        node = self.retrieve(nid)
+        title, path, body = node['title'], \
+                    node['path'], \
+                    node['body']['und'][0]['value']
+
+        return dict(title=title, path=path, body=body)
+
 
 class TermService(Crud):
 
@@ -433,5 +445,6 @@ if __name__ == '__main__':
     import config
     drupal = DrupalServices(config.config_local)
     drupal(config.config_remote)
-    print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO', summary='**Foo**' )
+    # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO', summary='**Foo**' )
+    print drupal.node.latest()['path']
 
