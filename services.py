@@ -264,6 +264,15 @@ class NodeService(Crud):
 
         return dict(title=title, path=path, body=body)
 
+    def custom(self):
+        """
+        Views data export Page
+        Manually faked path for services path
+        api/node/latest.json
+        """
+        data = self.request( method='GET',
+                url='%s/latest.json' % self.full_path)[0]
+        return data
 
 class TermService(Crud):
 
@@ -447,4 +456,6 @@ if __name__ == '__main__':
     drupal(config.config_remote)
     # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO', summary='**Foo**' )
     print drupal.node.latest()['path']
+    print drupal.node.custom()['path']
+    # print drupal.node.full_path
 
