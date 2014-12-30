@@ -12,33 +12,15 @@ test_drupal = services.DrupalServices(config=config.config_local)
 
 
 # CRUID Tests
+# ----------------
+# 1/5   CREATE
+# 2/5   INDEX
+# 3/5   RETRIEVE
+# 4/5   UPDATE
+# 5/5   DELETE
+# ----------------
 
-
-# 1/5 Index
-def test_index_node():
-    index = test_drupal.node.index()
-    assert (index == [] or
-            index[0].has_key('nid'))
-
-
-def test_index_vocabulary():
-    index = test_drupal.term.index()
-    assert (index == [] or
-            index[0].has_key('vid'))
-
-
-def test_index_term():
-    index = test_drupal.term.index()
-    assert (index == [] or
-            index[0].has_key('tid'))
-
-
-def test_index_file():
-    index = test_drupal.file.index()
-    assert (index == [] or
-            index[0].has_key('fid'))
-# 2/5 Create
-
+# 1/5   CREATE
 
 def test_create_node():
     resp = test_drupal.node.create(
@@ -71,11 +53,38 @@ def test_create_term():
 
 
 def test_create_file():
+    # TODO
     # Coming soon ;)
     pass
 
-# 3/5 Retrieve
+# 2/5   INDEX
 
+
+def test_index_node():
+    index = test_drupal.node.index()
+    assert (index == [] or
+            index[0].has_key('nid'))
+
+
+def test_index_vocabulary():
+    index = test_drupal.term.index()
+    assert (index == [] or
+            index[0].has_key('vid'))
+
+
+def test_index_term():
+    index = test_drupal.term.index()
+    assert (index == [] or
+            index[0].has_key('tid'))
+
+
+def test_index_file():
+    index = test_drupal.file.index()
+    assert (index == [] or
+            index[0].has_key('fid'))
+
+
+# 3/5   RETRIEVE
 
 def test_retrieve_node():
     # TODO Fetch node index and pass a arbitrary id
