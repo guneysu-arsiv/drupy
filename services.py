@@ -22,12 +22,20 @@ use and manage tokens permission.
 
 import requests
 import json
+import logging
 
-from datetime import date
+import datetime
 
-TODAY = date.today()
-TODAYF = TODAY.strftime('%m/%d/%Y')
-# TODO give ability to custom date/time formatting
+
+def formatted_date(date_object, format='%m/%d/%Y - %H:%M:%S'):
+    # TODO give ability to custom date/time formatting
+    """
+    Parameters:
+        date  : datetime.date() item
+        format      : string used for formatting
+    """
+
+    return date_object.strftime(format)
 
 
 class Node(dict):
@@ -40,34 +48,38 @@ class Node(dict):
     """
 
     def __init__(self,
-            type = None,
-            log = None,
-            status=None,
-            comment = None,
-            sticky = None,
-            language = "und",
-            promote = None,
-            frontpage = None,
+                 type=None,
+                 log='Published via Drupal Services',
+                 status=None,
+                 comment=None,
+                 sticky=None,
+                 language="und",
+                 promote=None,
+                 frontpage=None,
+                 **kwargs):
 
-            **kwargs):
-        self.kwargs = kwargs
-        kwargs.update( dict( type = type,
-            log = log,
-            status = status,
-            comment = comment,
-            sticky = sticky,
-            language = language,
-            promote = promote,
-            frontpage = frontpage))
-        body = {'body': {'und':
-                         [{'summary': kwargs.get('summary'),
-                           'value': kwargs.get('body')}]}}
+        kwargs.update(dict(
+            type=type,
+            log=log,
+            status=status,
+            comment=comment,
+            sticky=sticky,
+            language=language,
+            promote=promote,
+            frontpage=frontpage))
+        body = dict(body=dict(und=[dict(
+            summary=kwargs.get('summary'),
+            value=kwargs.get('body')
+        )]))
+        # body = {'body': {'und':
+        #                  [{'summary': kwargs.get('summary'),
+        #                    'value': kwargs.get('body')}]}}
         super(Node, self).__init__(**kwargs)
-        self.update ( dict(
-                self.items() +
-                body.items() +
-                dict(status  = status ).items())
-                )
+        self.update(dict(
+            self.items() +
+            body.items() +
+            dict(status=status).items())
+        )
 
     def publish(self):
         pass
@@ -91,23 +103,26 @@ class Node(dict):
 class Takvim(Node):
 
     """docstring for Takvim"""
+    # FIXME get parameter for field_date
+    # TODO getting field name from parameters
 
     def __init__(self, **kwargs):
+        # FIXME FIXME FIXME here is very confusing
         self.kwargs = kwargs
-        date_value_formatted = {'date' : TODAYF }
-        field_date = {"field_date":
-               {"und": [{"value": date_value_formatted }]}}
-        node_settings = dict(format = 'markdown', type='takvim')
+
+        kwargs['field_date'] = dict(und=[dict(
+            value=dict(date=formatted_date(kwargs.get('field_date'))),
+            timezone='UTC'
+        )])
+        kwargs.update(dict(format='markdown', type='takvim'))
         kwargs['status'] = True
         super(Takvim, self).__init__(**kwargs)
-        self.update( dict(
-            field_date.items() +
-            node_settings.items()))
 
 
 class BlogPost(Node):
 
     """docstring for Takvim"""
+    # FIXME FIXME FIXME !!!
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
@@ -140,9 +155,9 @@ class ServicesRequest(object):
         resp = requests.request(method=method,
                                 url=url,
                                 params=self.params,
-                                data= json.dumps(data),
+                                data=json.dumps(data),
                                 headers={'Accept': 'application/%s' % accept,
-                                    'Content-Type': 'application/json'})
+                                         'Content-Type': 'application/json'})
         return resp.json()
 
 
@@ -173,17 +188,17 @@ class Crud(object):
         # Method GET
         return self.request('GET', self.full_path)
 
-    def create(self, url=None, Type=None, **kwargs):
+    def create(self, Type, **kwargs):
         """
         Type parameter only used for Nodes.
         You can derive a custom NodeType class from Node() class.
         And pass it as an argument.
         See NodeService.new() method
         """
+
         # Method POST
-        if not url:
-            url = self.full_path
-        data = self.new(Type= Type, **kwargs)
+        url = self.full_path
+        data = self.new(Type, **kwargs)
         return self.request(
             method='POST',
             url=url,
@@ -191,16 +206,19 @@ class Crud(object):
         # FIXME No need to pass Type parameter if self is not instance of
         # NodeService
 
-    def update(self, id, node):
+    def update(self, id, data):
         # Method PUT
         url = self.id_path(id)
         return self.request(
             method='PUT',
-            url=self.full_path,
-            data=self.new(**kwargs))
+            url=url,
+            data=data)  # FIXME data or json.dumps(data) ?
 
     def retrieve(self, id):
         # Method  GET
+        # TODO normalize
+        # node[body][und][value] -> node[body]
+        # node[summary][und][value] -> node[summary]
         return self.request('GET', self.id_path(id))
 
     def delete(self, id):
@@ -234,7 +252,7 @@ class NodeService(Crud):
         super(NodeService, self).__init__(*args, **kwargs)
         return
 
-    def new(self, Type=None, **kwargs):
+    def new(self, Type, **kwargs):
         # TODO May take Node type as argument
         """
         :param kargs:
@@ -252,17 +270,32 @@ class NodeService(Crud):
         """
         return Type(**kwargs)
 
-    def latest(self):
+    def last_updated(self):
         """
-        Extra   : Retrieve the latest node data
+        Extra   : Retrieve the last updated node
         """
-        nid = self.index()[0]['nid']
-        node = self.retrieve(nid)
-        title, path, body = node['title'], \
-                    node['path'], \
-                    node['body']['und'][0]['value']
+        if self.index() != []:
+            nid = self.index()[0]['nid']
+            node = self.retrieve(nid)
+            title, path, body = node['title'], \
+                node['path'], \
+                node['body']['und'][0]['value']
+            return dict(title=title, path=path, body=body)
+        else:
+            return dict()
 
-        return dict(title=title, path=path, body=body)
+    def custom(self):
+        """
+        Views data export Page
+        Manually faked path for services path
+        api/node/latest.json
+        """
+        data = self.request(method='GET',
+                            url='%s/latest.json' % self.full_path)
+        if data != [] and data[0].has_key('title'):
+            return data
+        else:
+            return dict()
 
 
 class TermService(Crud):
@@ -340,8 +373,11 @@ class VocabularyService(Crud):
         """
         return super(VocabularyService, self).new(**kwargs)
 
+
 class UserService(Crud):
+
     """docstring for UserService"""
+
     def __init__(self, *args, **kwargs):
         self.base_url = 'user'
         self.args = args
@@ -369,8 +405,9 @@ class UserService(Crud):
         URL     :   register
         """
         return super(UserService, self).create(
-                url = '%s/%s' % (self.full_path, url),
-                **kwargs)
+            url='%s/%s' % (self.full_path, url),
+            **kwargs)
+
     def login(self, *args, **kwargs):
         """docstring for login"""
         pass
@@ -394,7 +431,6 @@ class UserService(Crud):
     def password_reset(self, *args, **kwargs):
         """docstring for password_reset"""
         pass
-
 
 
 class SystemService(object):
@@ -430,6 +466,7 @@ class DrupalServices:
     # config_remote, config_other
     # get_attr, set_attr
     # Can be implemented by __call__ method
+
     def __init__(self, config):
         self.node = NodeService(config=config)
         self.term = TermService(config=config)
@@ -444,7 +481,10 @@ class DrupalServices:
 if __name__ == '__main__':
     import config
     drupal = DrupalServices(config.config_local)
-    drupal(config.config_remote)
-    # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO', summary='**Foo**' )
-    print drupal.node.latest()['path']
-
+    # drupal(config.config_remote)
+    # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO',
+    # summary='**Foo**' )
+    print drupal.node.last_updated().get('path')
+    print drupal.node.custom()[0].get('path')
+    # print drupal.node.full_path
+    print formatted_date(datetime.date(2014, 1, 1), '%F')
