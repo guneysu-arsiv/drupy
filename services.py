@@ -293,7 +293,7 @@ class NodeService(Crud):
         data = self.request(method='GET',
                             url='%s/latest.json' % self.full_path)
         if data != [] and data[0].has_key('title'):
-            return data
+            return data[0]
         else:
             return dict()
 
@@ -485,6 +485,6 @@ if __name__ == '__main__':
     # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO',
     # summary='**Foo**' )
     print drupal.node.last_updated().get('path')
-    print drupal.node.custom()[0].get('path')
+    print drupal.node.custom().get('path')
     # print drupal.node.full_path
     print formatted_date(datetime.date(2014, 1, 1), '%F')
