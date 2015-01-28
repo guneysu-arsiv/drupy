@@ -3,8 +3,10 @@
 __author__ = 'ahmedseref'
 
 import sys
-sys.path.append('..')
 import services
+from services import Page, BlogPost, \
+        Vocabulary, Term, File
+sys.path.append('..')
 import config
 from pprint import pprint
 
@@ -24,8 +26,8 @@ test_drupal = services.DrupalServices(config=config.config_local)
 
 def test_create_node():
     resp = test_drupal.node.create(
+        Type=Page,
         title='__TITLE',
-        type='blog_post',
         body='**BOO YEAH!**',
         summary='_Summary_')
     assert (resp.has_key('nid'))
@@ -33,10 +35,11 @@ def test_create_node():
 
 def test_create_vocabulary():
     resp = test_drupal.vocabulary.create(
+            Type=Vocabulary,
         name='Voccaaa!',
         description='Description',
         machine_name='test_voca',
-        format='markdown')
+        format='plain_text')
     assert (resp == [1])
 
 
@@ -44,11 +47,12 @@ def test_create_term():
     # TODO Check if there a vocabulary with vid
     # TODO Or pick first vid from vocabulary_index
     resp = test_drupal.term.create(
-        vid=2,
+        Type=Term,
+        vid=1,
         name='Example Term!',
         description='Description',
         machine_name='test_voca',
-        format='markdown')
+        format='plain_text')
     assert (resp == [1])
 
 

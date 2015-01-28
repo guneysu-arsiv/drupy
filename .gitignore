@@ -55,4 +55,4 @@ target/
 
 # Config
 config.py
-
+doc/*.png

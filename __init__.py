@@ -3,4 +3,13 @@
 import sys
 sys.path.append('..')
 
-__all__ = []
+from services import *
+
+__all__ = [
+        'actions',
+        'entities',
+        'fields',
+        'node_types',
+        'relations',
+        'targeted_actions'
+        ]

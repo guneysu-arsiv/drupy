@@ -37,96 +37,12 @@ def formatted_date(date_object, format='%m/%d/%Y - %H:%M:%S'):
 
     return date_object.strftime(format)
 
-
-class Node(dict):
-
-    """docstring for Node
-        Placeholder for base Node type
-        This class will be used for custom nodes
-        that have different field types
-        Like date, long, list, taxonomy_reference, etc.
-    """
-
-    def __init__(self,
-                 type=None,
-                 log='Published via Drupal Services',
-                 status=None,
-                 comment=None,
-                 sticky=None,
-                 language="und",
-                 promote=None,
-                 frontpage=None,
-                 **kwargs):
-
-        kwargs.update(dict(
-            type=type,
-            log=log,
-            status=status,
-            comment=comment,
-            sticky=sticky,
-            language=language,
-            promote=promote,
-            frontpage=frontpage))
-        body = dict(body=dict(und=[dict(
-            summary=kwargs.get('summary'),
-            value=kwargs.get('body')
-        )]))
-        # body = {'body': {'und':
-        #                  [{'summary': kwargs.get('summary'),
-        #                    'value': kwargs.get('body')}]}}
-        super(Node, self).__init__(**kwargs)
-        self.update(dict(
-            self.items() +
-            body.items() +
-            dict(status=status).items())
-        )
-
-    def publish(self):
-        pass
-
-    def unpublish(self):
-        pass
-
-    def lookup(self):
-        pass
-
-    def autocomplete(self):
-        pass
-
-    def files(self):
-        pass
-
-    def attach_file(self):
-        pass
-
-
-class Takvim(Node):
-
-    """docstring for Takvim"""
-    # FIXME get parameter for field_date
-    # TODO getting field name from parameters
-
-    def __init__(self, **kwargs):
-        # FIXME FIXME FIXME here is very confusing
+class ClassName(object):
+    """docstring for ClassName"""
+    def __init__(self, *args, **kwargs):
+        super(ClassName, self).__init__(*args, **kwargs)
+        self.args = args
         self.kwargs = kwargs
-
-        kwargs['field_date'] = dict(und=[dict(
-            value=dict(date=formatted_date(kwargs.get('field_date'))),
-            timezone='UTC'
-        )])
-        kwargs.update(dict(format='markdown', type='takvim'))
-        kwargs['status'] = True
-        super(Takvim, self).__init__(**kwargs)
-
-
-class BlogPost(Node):
-
-    """docstring for Takvim"""
-    # FIXME FIXME FIXME !!!
-
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
-        return super(BlogPost, self).__init__(type='blog_post', **kwargs)
 
 
 class ServicesRequest(object):
@@ -255,7 +171,7 @@ class NodeService(Crud):
     def new(self, Type, **kwargs):
         # TODO May take Node type as argument
         """
-        :param kargs:
+        :param kwargs:
         :return: Node(dict)
         Essential kwargs for node creations are
         type and title
@@ -481,10 +397,17 @@ class DrupalServices:
 if __name__ == '__main__':
     import config
     drupal = DrupalServices(config.config_local)
+
+    # print drupal.node.index()
+    # print drupal.term.index()
+    # print drupal.file.index()
+    # print drupal.user.index()
+    # print drupal.vocabulary.index()
+    print drupal.node.create(BlogPost, title="foo",body="body")
     # drupal(config.config_remote)
     # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO',
     # summary='**Foo**' )
-    print drupal.node.last_updated().get('path')
-    print drupal.node.custom().get('path')
+    # print drupal.node.last_updated().get('path')
+    # print drupal.node.custom().get('path')
     # print drupal.node.full_path
-    print formatted_date(datetime.date(2014, 1, 1), '%F')
+    # print formatted_date(datetime.date(2014, 1, 1), '%F')
