@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 #
 
+
 class Vocabulary(dict):
     pass
+
 
 class Term(dict):
     pass
 
+
 class File(dict):
     pass
+
 
 class Node(dict):
 
@@ -55,11 +59,11 @@ class Node(dict):
         )
 
 
-
 class System(object):
+
     """docstring for System"""
+
     def __init__(self, *args, **kwargs):
         super(System, self).__init__(*args, **kwargs)
         self.args = args
         self.kwargs = kwargs
-

@@ -20,6 +20,7 @@ class Takvim(Node):
         kwargs['status'] = True
         super(Takvim, self).__init__(**kwargs)
 
+
 class BlogPost(Node):
 
     """docstring for Takvim"""
@@ -29,6 +30,7 @@ class BlogPost(Node):
         self.kwargs = kwargs
         return super(BlogPost, self).__init__(type='blog_post', **kwargs)
 
+
 class Page(Node):
 
     """docstring for Simple Page"""
@@ -37,6 +39,3 @@ class Page(Node):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         return super(Page, self).__init__(type='page', **kwargs)
-
-
-

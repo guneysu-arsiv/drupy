@@ -6,10 +6,10 @@ sys.path.append('..')
 from services import *
 
 __all__ = [
-        'actions',
-        'entities',
-        'fields',
-        'node_types',
-        'relations',
-        'targeted_actions'
-        ]
+    'actions',
+    'entities',
+    'fields',
+    'node_types',
+    'relations',
+    'targeted_actions'
+]

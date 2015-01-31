@@ -5,7 +5,7 @@ __author__ = 'ahmedseref'
 import sys
 import services
 from services import Page, BlogPost, \
-        Vocabulary, Term, File
+    Vocabulary, Term, File
 sys.path.append('..')
 import config
 from pprint import pprint
@@ -35,7 +35,7 @@ def test_create_node():
 
 def test_create_vocabulary():
     resp = test_drupal.vocabulary.create(
-            Type=Vocabulary,
+        Type=Vocabulary,
         name='Voccaaa!',
         description='Description',
         machine_name='test_voca',

@@ -37,8 +37,11 @@ def formatted_date(date_object, format='%m/%d/%Y - %H:%M:%S'):
 
     return date_object.strftime(format)
 
+
 class ClassName(object):
+
     """docstring for ClassName"""
+
     def __init__(self, *args, **kwargs):
         super(ClassName, self).__init__(*args, **kwargs)
         self.args = args
@@ -403,7 +406,7 @@ if __name__ == '__main__':
     # print drupal.file.index()
     # print drupal.user.index()
     # print drupal.vocabulary.index()
-    print drupal.node.create(BlogPost, title="foo",body="body")
+    print drupal.node.create(BlogPost, title="foo", body="body")
     # drupal(config.config_remote)
     # print drupal.node.create( Type=Takvim, title='__TEST', body='BOOO',
     # summary='**Foo**' )

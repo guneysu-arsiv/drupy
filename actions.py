@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 
+
 class NodeActions(object):
+
     """docstring for NodeActions"""
+
     def __init__(self, *args, **kwargs):
         super(NodeActions, self).__init__(*args, **kwargs)
         self.args = args
@@ -15,15 +18,21 @@ class NodeActions(object):
     def unpublish(self):
         pass
 
+
 class VocabularyActions(object):
+
     """docstring for VocabularyActions"""
+
     def __init__(self, *args, **kwargs):
         super(VocabularyActions, self).__init__(*args, **kwargs)
         self.args = args
         self.kwargs = kwargs
 
+
 class TermActions(object):
+
     """docstring for TermActions"""
+
     def __init__(self, *args, **kwargs):
         super(TermActions, self).__init__(*args, **kwargs)
         self.args = args
@@ -33,8 +42,11 @@ class TermActions(object):
         """docstring for selectNodes"""
         pass
 
+
 class FileActions(object):
+
     """docstring for FileActions"""
+
     def __init__(self, *args, **kwargs):
         super(FileActions, self).__init__(*args, **kwargs)
         self.args = args
@@ -45,16 +57,20 @@ class FileActions(object):
         pass
 
 
-
 class UserActions(object):
+
     """docstring for UserActions"""
+
     def __init__(self, *args, **kwargs):
         super(UserActions, self).__init__(*args, **kwargs)
         self.args = args
         self.kwargs = kwargs
 
+
 class SystemActions(object):
+
     """docstring for SystemActions"""
+
     def __init__(self, *args, **kwargs):
         super(SystemActions, self).__init__(*args, **kwargs)
         self.args = args
@@ -75,4 +91,3 @@ class SystemActions(object):
     def del_variable(self, *args, **kwargs):
         """docstring for del_variable"""
         pass
-
