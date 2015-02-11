@@ -1,16 +1,6 @@
-python_drupal_services_v3
+Drupy - Python Interface for Drupal Services
 =========================
 
+[![Code Health](https://landscape.io/github/guneysus/drupy/release/v1.0-x/landscape.svg?style=flat)](https://landscape.io/github/guneysus/drupy/release/v1.0-x)
+
 Simple Python Interface for Drupal
-
-If you are using Revisions module, you might want to disable From
-
-  admin > content types >  {node_type} > publishing options
-  
-
-- [ ] **Auto-publish drafts of type takvim (for moderators)**
-
-Also it is recommended that checking
-
-- [x] **Creat new revision**
-- [x] **New revision in draft, pending moderation.**
