@@ -5,7 +5,8 @@ __all__ = [
     'field_date',
     'long_text']
 
-lass LongText(object):
+
+class LongText(object):
     """docstring for LongText"""
 
     def __init__(self, *args, **kwargs):

@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+class Node(dict):
+    """
+    Base class for Node types.
+    Note that body (long text with summary) field is not required
+    for a content type. It is highly recommended for a content type
+    """
+    def __init__(self, *args, **kwargs):
+        super(Node, self).__init__(*args, **kwargs)
+        self.args = args
+        self.kwargs = kwargs
 
 class Takvim(Node):
 
